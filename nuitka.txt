@@ -1,0 +1,2 @@
+nuitka --standalone --onefile --windows-console-mode=disable --enable-plugin=pyside6 --mingw64 --windows-icon-from-ico=icon.ico main.py
+
