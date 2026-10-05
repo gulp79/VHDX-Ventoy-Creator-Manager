@@ -39,7 +39,7 @@ The app executes a structured 5-step automation pipeline under the hood:
 
 ## Troubleshooting & OOBE Workaround
 
-### Error: "Windows could not update the computer's boot configuration"</mark>
+### <mark>Error: "Windows could not update the computer's boot configuration"</mark>
 
 During the first Out-Of-Box Experience (OOBE/Specialize phase) under Ventoy, Windows Setup may occasionally attempt to update the host machine's physical NVRAM and throw a boot configuration error.  
 
