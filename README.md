@@ -1,3 +1,4 @@
+[![GitHub release](https://img.shields.io/github/v/release/gulp79/VHDX-Ventoy-Creator-Manager?include_prereleases)](https://github.com/gulp79/VHDX-Ventoy-Creator-Manager/releases/latest)  ![Total Downloads](https://img.shields.io/github/downloads/gulp79/VHDX-Ventoy-Creator-Manager/total)  ![Latest Downloads](https://img.shields.io/github/downloads/gulp79/VHDX-Ventoy-Creator-Manager/latest/total)
 # VHDX Ventoy Creator & Manager
 
 A modern desktop application built with Python and PySide6 (Qt6) to automate the creation, differential disk management, and Ventoy USB deployment of Windows VHDX virtual hard drives for **Native Boot**.  
