@@ -15,7 +15,7 @@ Booting Windows directly from a VHDX file (Native Boot) provides bare-metal perf
 - **EFI Bootloader Injection:** Automatically targets the dedicated internal FAT32 EFI partition with `bcdboot` for clean Ventoy boot handoffs.  
 - **Differential Disk Branching (Parent/Child):** Instant creation of lightweight child disks for disposable testing environments.
 - **Driver Injection Support:** Offline driver integration (`.inf`) via DISM prior to initial system boot.  
-- **Clean Standard OOBE Flow:** Preserves original Windows security initialization (SAM) to prevent deployment crash loops.  
+- **Clean Standard OOBE Flow:** Preserves original Windows security initialization (SAM) to prevent deployment crash loops.
 
 ## Why It's Useful & Use Cases
 
@@ -39,7 +39,7 @@ The app executes a structured 5-step automation pipeline under the hood:
 
 ## Troubleshooting & OOBE Workaround
 
-### Error: "Windows could not update the computer's boot configuration"
+### Error: "Windows could not update the computer's boot configuration"</mark>
 
 During the first Out-Of-Box Experience (OOBE/Specialize phase) under Ventoy, Windows Setup may occasionally attempt to update the host machine's physical NVRAM and throw a boot configuration error.  
 
