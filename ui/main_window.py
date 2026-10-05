@@ -6,9 +6,10 @@ import sys
 import os
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QTabWidget, QSplitter, QPushButton, QStatusBar, QFrame
+    QTabWidget, QSplitter, QPushButton, QStatusBar, QFrame,
+    QMessageBox, QApplication
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QFont
 
 from ui.tabs.tab_master import TabMasterWidget
@@ -120,7 +121,48 @@ class MainWindow(QMainWindow):
         else:
             self.admin_badge.setText("STANDARD USER (Restricted)")
             self.admin_badge.setObjectName("badgeDanger")
-            self.console.append_log("Warning: Not running as Administrator. diskpart/dism operations may fail.", "WARNING")
+            self.console.append_log("WARNING: Application is running without Administrator privileges.", "WARNING")
+            self.console.append_log("VHDX creation, diskpart, DISM image applying, and bcdboot will NOT work without admin rights.", "ERROR")
+            # Display prominent English warning modal on startup
+            QTimer.singleShot(150, self._show_admin_warning_dialog)
 
         self.admin_badge.style().unpolish(self.admin_badge)
         self.admin_badge.style().polish(self.admin_badge)
+
+    def _show_admin_warning_dialog(self):
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Administrator Privileges Required")
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setTextFormat(Qt.RichText)
+        msg_box.setText(
+            "<h3 style='color: #ef4444; margin-bottom: 8px;'>Administrator Privileges Required</h3>"
+            "<p><b>VHDX Ventoy Creator & Manager was launched without Administrator rights.</b></p>"
+            "<p>Without administrative privileges, this application <b>cannot function properly</b> because:</p>"
+            "<ul>"
+            "<li><b>VHDX Creation & Partitioning</b> (<code>diskpart</code>) requires low-level disk access.</li>"
+            "<li><b>Windows Image Extraction</b> (<code>DISM</code>) requires elevated system privileges.</li>"
+            "<li><b>Bootloader Injection</b> (<code>bcdboot</code>) requires access to system EFI partitions.</li>"
+            "</ul>"
+            "<p>Any attempt to create or modify virtual disks will fail.</p>"
+            "<p>Please relaunch the application using <b>'Run as administrator'</b>.</p>"
+        )
+
+        restart_btn = msg_box.addButton("Restart as Administrator", QMessageBox.AcceptRole)
+        restart_btn.setObjectName("primaryBtn")
+        continue_btn = msg_box.addButton("Continue Anyway (Restricted)", QMessageBox.RejectRole)
+
+        msg_box.setDefaultButton(restart_btn)
+        msg_box.exec()
+
+        if msg_box.clickedButton() == restart_btn:
+            from utils.admin import request_admin_elevation
+            elevated = request_admin_elevation()
+            if elevated:
+                QApplication.quit()
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Elevation Failed",
+                    "Could not automatically elevate process.\n\n"
+                    "Please close the program, right-click its executable, and select 'Run as administrator'."
+                )

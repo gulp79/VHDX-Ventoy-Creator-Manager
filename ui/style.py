@@ -384,4 +384,16 @@ QLabel#badgeInfo {
     padding: 2px 8px;
     font-weight: 600;
 }
+
+/* Dialogs & Message Boxes */
+QMessageBox {
+    background-color: #1c1c24;
+    border: 1px solid #383846;
+}
+
+QMessageBox QLabel {
+    color: #f8fafc;
+    font-size: 13px;
+    background-color: transparent;
+}
 """

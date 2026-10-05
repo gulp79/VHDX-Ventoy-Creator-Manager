@@ -18,6 +18,7 @@ from utils.constants import (
 from utils.disk_info import get_disk_space_info, format_size, validate_space_headroom
 from core.dism_engine import get_wim_info
 from core.vhd_engine import mount_iso, unmount_iso, find_wim_or_esd_in_drive
+from utils.admin import is_admin
 
 
 class WimInspectionWorker(QThread):
@@ -316,6 +317,15 @@ class TabMasterWidget(QWidget):
             self.size_slider.setValue(val)
 
     def start_creation(self):
+        if not is_admin():
+            QMessageBox.critical(
+                self,
+                "Administrator Rights Required",
+                "Administrator privileges are required to create, partition, and format VHDX virtual disks.\n\n"
+                "Please close this application and restart it using 'Run as administrator'."
+            )
+            return
+
         source = self.source_picker.text()
         if not source or not os.path.isfile(source):
             QMessageBox.warning(self, "Validation Error", "Please select a valid Windows source file (.iso, .wim, .esd).")

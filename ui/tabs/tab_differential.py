@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, Signal
 from ui.widgets.path_picker import PathPickerWidget
 from ui.workers.diff_worker import DifferentialWorker
 from utils.disk_info import format_size
+from utils.admin import is_admin
 
 
 class TabDifferentialWidget(QWidget):
@@ -134,6 +135,15 @@ class TabDifferentialWidget(QWidget):
             self.child_picker.setText(candidate)
 
     def create_child_disk(self):
+        if not is_admin():
+            QMessageBox.critical(
+                self,
+                "Administrator Rights Required",
+                "Administrator privileges are required to create differential VHDX disks.\n\n"
+                "Please close this application and restart it using 'Run as administrator'."
+            )
+            return
+
         parent = self.parent_picker.text()
         child = self.child_picker.text()
 

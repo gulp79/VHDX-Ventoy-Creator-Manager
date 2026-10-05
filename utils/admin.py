@@ -30,8 +30,15 @@ def request_admin_elevation(params: str = "") -> bool:
         return False
 
     try:
-        script = os.path.abspath(sys.argv[0])
-        args = " ".join([f'"{arg}"' for arg in sys.argv[1:]])
+        is_frozen = getattr(sys, 'frozen', False)
+        if is_frozen:
+            executable = sys.executable
+            args = " ".join([f'"{arg}"' for arg in sys.argv[1:]])
+        else:
+            executable = sys.executable
+            script = os.path.abspath(sys.argv[0])
+            args = f'"{script}" ' + " ".join([f'"{arg}"' for arg in sys.argv[1:]])
+
         if params:
             args = f"{args} {params}".strip()
 
@@ -39,8 +46,8 @@ def request_admin_elevation(params: str = "") -> bool:
         hinstance = ctypes.windll.shell32.ShellExecuteW(
             None,
             "runas",
-            sys.executable,
-            f'"{script}" {args}'.strip(),
+            executable,
+            args.strip(),
             None,
             1  # SW_SHOWNORMAL
         )
