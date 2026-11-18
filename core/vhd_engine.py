@@ -303,3 +303,114 @@ def find_wim_or_esd_in_drive(drive_letter: str) -> Optional[str]:
             pass
 
     return None
+
+
+def disable_dse_in_bcd(
+    efi_drive_letter: str,
+    on_line: Optional[Callable[[str], None]] = None,
+    cancel_event: Optional[threading.Event] = None
+) -> Tuple[bool, str]:
+    r"""
+    Disable Driver Signature Enforcement (DSE) in the VHDX BCD store.
+
+    Operates on the BCD file inside the mounted EFI partition of the VHDX
+    (e.g. S:\EFI\Microsoft\Boot\BCD) using 'bcdedit /store <path>'.
+    This avoids touching the host system BCD.
+
+    Sets for each Windows Boot Loader entry (winload.efi) found:
+        - nointegritychecks on
+        - testsigning on
+    And for {bootmgr}:
+        - nointegritychecks on
+
+    Returns:
+        Tuple (success: bool, message: str)
+    """
+    import re
+
+    clean_efi = efi_drive_letter.strip(":").upper()
+    bcd_path = f"{clean_efi}:\\EFI\\Microsoft\\Boot\\BCD"
+
+    if not os.path.exists(bcd_path):
+        return False, f"BCD store not found at '{bcd_path}'. Ensure bcdboot_inject was run first."
+
+    if on_line:
+        on_line(f"[DSE] Operating on BCD store: {bcd_path}")
+
+    # Step 1: Enumerate all BCD entries
+    cmd_enum = ["bcdedit", "/store", bcd_path, "/enum", "all"]
+    if on_line:
+        on_line(f"[CMD] {' '.join(cmd_enum)}")
+
+    exit_code, output = run_command(cmd_enum, on_line=on_line, cancel_event=cancel_event)
+    if exit_code != 0:
+        return False, f"bcdedit /enum failed (code {exit_code}): {output}"
+
+    if cancel_event and cancel_event.is_set():
+        return False, "Operation cancelled."
+
+    # Step 2: Parse output to find Windows Boot Loader GUIDs with winload.efi
+    # bcdedit output blocks are separated by blank lines.
+    # Each block starts with a type line, dashes, then key-value pairs.
+    identifier_pattern = re.compile(r'identifier\s+(\{[^}]+\})', re.IGNORECASE)
+    path_pattern = re.compile(r'^\s*path\s+.*winload\.efi', re.IGNORECASE | re.MULTILINE)
+
+    # Normalize line endings and split into blocks
+    normalized = output.replace('\r\n', '\n').replace('\r', '\n')
+    blocks = re.split(r'\n\s*\n', normalized)
+
+    loader_guids = []
+    for block in blocks:
+        if path_pattern.search(block):
+            id_match = identifier_pattern.search(block)
+            if id_match:
+                guid = id_match.group(1).strip()
+                if guid not in loader_guids:
+                    loader_guids.append(guid)
+
+    if not loader_guids:
+        # Soft warning: no winload.efi entries found, fallback to {default}
+        if on_line:
+            on_line("[DSE] WARNING: No winload.efi entries found in BCD. Attempting fallback on {default}.")
+        loader_guids = ["{default}"]
+
+    if on_line:
+        on_line(f"[DSE] Found {len(loader_guids)} Windows Boot Loader entry/entries: {', '.join(loader_guids)}")
+
+    errors = []
+
+    # Step 3: Apply DSE-disable flags to each Windows Boot Loader entry
+    for guid in loader_guids:
+        if cancel_event and cancel_event.is_set():
+            return False, "Operation cancelled."
+
+        for flag_name, flag_value in [("nointegritychecks", "on"), ("testsigning", "on")]:
+            cmd = ["bcdedit", "/store", bcd_path, "/set", guid, flag_name, flag_value]
+            if on_line:
+                on_line(f"[CMD] {' '.join(cmd)}")
+            rc, out = run_command(cmd, on_line=on_line, cancel_event=cancel_event)
+            if rc != 0:
+                err = f"bcdedit /set {guid} {flag_name} {flag_value} failed (code {rc}): {out}"
+                errors.append(err)
+                if on_line:
+                    on_line(f"[DSE] WARNING: {err}")
+
+    # Step 4: Apply nointegritychecks to {bootmgr}
+    if cancel_event and cancel_event.is_set():
+        return False, "Operation cancelled."
+
+    cmd_bmgr = ["bcdedit", "/store", bcd_path, "/set", "{bootmgr}", "nointegritychecks", "on"]
+    if on_line:
+        on_line(f"[CMD] {' '.join(cmd_bmgr)}")
+    rc_bmgr, out_bmgr = run_command(cmd_bmgr, on_line=on_line, cancel_event=cancel_event)
+    if rc_bmgr != 0:
+        err = f"bcdedit /set {{bootmgr}} nointegritychecks on failed (code {rc_bmgr}): {out_bmgr}"
+        errors.append(err)
+        if on_line:
+            on_line(f"[DSE] WARNING: {err}")
+
+    if errors:
+        return True, f"DSE disable completed with {len(errors)} warning(s): {'; '.join(errors)}"
+
+    applied = ", ".join(loader_guids + ["{bootmgr}"])
+    return True, f"DSE disabled successfully (nointegritychecks + testsigning) on: {applied}"

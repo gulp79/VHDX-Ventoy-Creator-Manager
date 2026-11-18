@@ -15,6 +15,7 @@ from core.vhd_engine import (
     create_master_vhdx,
     detach_vhdx,
     bcdboot_inject,
+    disable_dse_in_bcd,
     mount_iso,
     unmount_iso,
     find_wim_or_esd_in_drive
@@ -38,6 +39,7 @@ class MasterCreationWorker(QThread):
         vhdx_type: str = "expandable",
         driver_dir: str = "",
         volume_label: str = "WindowsVHD",
+        disable_dse: bool = False,
         parent=None
     ):
         super().__init__(parent)
@@ -49,6 +51,7 @@ class MasterCreationWorker(QThread):
         self.vhdx_type = vhdx_type
         self.driver_dir = driver_dir
         self.volume_label = volume_label
+        self.disable_dse = disable_dse
         self.cancel_event = threading.Event()
 
     def cancel(self):
@@ -194,6 +197,23 @@ class MasterCreationWorker(QThread):
 
             self.log_event.emit("BCD bootloader files injected successfully into EFI partition", "SUCCESS")
             self.progress_changed.emit(88)
+
+            # 5b. Optional: Disable Driver Signature Enforcement in VHDX BCD store
+            if self.disable_dse:
+                if self.cancel_event.is_set():
+                    self.task_finished.emit(False, "Operation cancelled by user.")
+                    return
+                self.status_changed.emit("Disabling Driver Signature Enforcement in BCD...")
+                self.log_event.emit("Applying DSE disable flags to VHDX BCD store...", "INFO")
+                dse_ok, dse_msg = disable_dse_in_bcd(
+                    efi_drive_letter=efi_letter,
+                    on_line=lambda l: self.log_event.emit(l, "RAW"),
+                    cancel_event=self.cancel_event
+                )
+                if dse_ok:
+                    self.log_event.emit(f"DSE disabled successfully: {dse_msg}", "SUCCESS")
+                else:
+                    self.log_event.emit(f"DSE disable warning: {dse_msg}", "WARNING")
 
             # 6. Optional: Inject Additional Device Drivers
             if self.driver_dir and os.path.isdir(self.driver_dir):

@@ -1,54 +1,79 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 
 # Virtualenv
 .venv/
 venv/
 env/
+ENV/
 
-# IDE
+# IDE & Editors
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
 
-# Antigravity
+# AI Coding Agents & Tool Artifacts
 .agents/
+.gemini/
+.claude/
+.cursor/
 implementation_plan.md
 walkthrough.md
 
-# Nuitka
+# Secrets, Credentials & Sensitive files
+.env
+.env.*
+*.env
+secrets.json
+credentials.json
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+
+# Disk Images & Virtual Drives (prevent accidental commit of local test images)
+*.vhd
+*.vhdx
+*.iso
+*.wim
+*.esd
+
+# Nuitka / PyInstaller / Builds
 build/
 dist/
 *.build/
 *.dist/
 *.exe
-
-# Nuitka onefile temp
 *.onefile-build/
+*.spec
 
-# Logs
+# Logs & Diagnostics
 *.log
+*.dmp
 
 # Windows
 Thumbs.db
 Desktop.ini
+$RECYCLE.BIN/
 
-# GitHub Actions artifacts locali
+# GitHub Actions & CI local artifacts
 artifacts/
 
-# Test
+# Testing & Coverage
 .pytest_cache/
 .coverage
+htmlcov/
 
-# Packaging
-*.spec
-
-# Backup
+# Temporary & Backup files
 *.bak
 *.old
 *.tmp
+*~
 
 # OS
 .DS_Store
