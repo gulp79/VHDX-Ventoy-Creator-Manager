@@ -77,7 +77,7 @@ def test_disable_dse_enum_failure():
 
         ok, msg = disable_dse_in_bcd("S:")
         assert ok is False
-        assert "bcdedit /enum all failed" in msg
+        assert "bcdedit /enum failed" in msg
 
 
 def test_disable_dse_success_flow():
@@ -97,7 +97,7 @@ def test_disable_dse_success_flow():
         ok, msg = disable_dse_in_bcd("S:", on_line=lines.append)
 
         assert ok is True
-        assert "Driver Signature Enforcement disabled successfully" in msg
+        assert "DSE disabled successfully" in msg
 
         # Expected calls:
         # 1. enum all

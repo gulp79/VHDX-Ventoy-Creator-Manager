@@ -177,7 +177,7 @@ class TabMasterWidget(QWidget):
         g_tgt_layout.addLayout(type_layout)
         layout.addWidget(group_target)
 
-        # 3. Optional Settings (Drivers + Boot Options)
+        # 3. Optional Settings (Drivers)
         group_drivers = QGroupBox("3. Optional Settings")
         g_drv_layout = QVBoxLayout(group_drivers)
         g_drv_layout.setSpacing(6)
@@ -191,15 +191,6 @@ class TabMasterWidget(QWidget):
             placeholder="Select folder containing driver files (.inf)... (Optional)"
         )
         g_drv_layout.addWidget(self.driver_picker)
-
-        # DSE checkbox
-        self.dse_checkbox = QCheckBox("Disable Driver Signature Enforcement (DSE / Test Signing)")
-        self.dse_checkbox.setToolTip(
-            "Applies nointegritychecks and testsigning flags to the VHDX BCD store.\n"
-            "Useful for loading unsigned or self-signed drivers inside the VHDX."
-        )
-        self.dse_checkbox.setStyleSheet("color: #cbd5e1; font-size: 12px; margin-top: 6px;")
-        g_drv_layout.addWidget(self.dse_checkbox)
 
         layout.addWidget(group_drivers)
 
@@ -375,8 +366,7 @@ class TabMasterWidget(QWidget):
             f"<b>Edition:</b> {self.edition_combo.currentText()}<br>"
             f"<b>Target:</b> {target_vhdx}<br>"
             f"<b>Size:</b> {size_gb} GB ({vhdx_type.capitalize()})<br>"
-            f"<b>Drivers:</b> {'None' if not driver_dir else driver_dir}<br>"
-            f"<b>Disable DSE:</b> {'Yes (testsigning &amp; nointegritychecks enabled)' if self.dse_checkbox.isChecked() else 'No'}<br><br>"
+            f"<b>Drivers:</b> {'None' if not driver_dir else driver_dir}<br><br>"
             f"<i>This process will create the VHDX, apply the Windows image, and configure native BCD boot files.</i>"
         )
         conf = QMessageBox.question(
@@ -393,7 +383,6 @@ class TabMasterWidget(QWidget):
         self.source_picker.setEnabled(False)
         self.target_picker.setEnabled(False)
         self.edition_combo.setEnabled(False)
-        self.dse_checkbox.setEnabled(False)
         self.progress_bar.setValue(0)
         self.status_label.setText("Starting Master VHDX creation pipeline...")
 
@@ -404,8 +393,7 @@ class TabMasterWidget(QWidget):
             size_gb=size_gb,
             vhdx_type=vhdx_type,
             driver_dir=driver_dir,
-            volume_label=DEFAULT_VOLUME_LABEL,
-            disable_dse=self.dse_checkbox.isChecked()
+            volume_label=DEFAULT_VOLUME_LABEL
         )
         self.worker.progress_changed.connect(self.progress_bar.setValue)
         self.worker.status_changed.connect(self.status_label.setText)
@@ -430,7 +418,6 @@ class TabMasterWidget(QWidget):
         self.source_picker.setEnabled(True)
         self.target_picker.setEnabled(True)
         self.edition_combo.setEnabled(True)
-        self.dse_checkbox.setEnabled(True)
 
         if success:
             self.status_label.setText("Master VHDX Created Successfully!")
