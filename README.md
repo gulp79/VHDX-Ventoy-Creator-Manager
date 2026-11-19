@@ -127,6 +127,20 @@ nuitka --standalone --onefile --windows-console-mode=disable --enable-plugin=pys
    - Download `ventoy_vhdboot.img` from the official Ventoy website.
    - Place it in the `/ventoy/` directory on your Ventoy USB drive (`/ventoy/ventoy_vhdboot.img`).
 
+### Driver Signature Enforcement (DSE) & Ventoy Boot Plugin
+
+Il controllo della firma dei driver (Driver Signature Enforcement / DSE) durante l'avvio del VHDX con Ventoy viene **gestito direttamente dal BCD contenuto nel file `ventoy_vhdboot.img`** (e non dal BCD interno del VHDX).
+
+Se hai la necessità di avviare il sistema con **DSE disabilitato** (ad esempio per caricare driver di test, non firmati o modificati):
+- Puoi utilizzare il file **`ventoy_vhdboot_DSE_DISABLED.img`** presente nel repository.
+- Copialo nella directory `/ventoy/` della chiavetta USB sostituendolo a `ventoy_vhdboot.img` (oppure rinominandolo in `ventoy_vhdboot.img`):
+  ```plaintext
+  <Ventoy_USB>:\ventoy\ventoy_vhdboot.img
+  ```
+
+> **English Summary:**  
+> When booting Windows VHDX via Ventoy, Driver Signature Enforcement (DSE) is controlled by the BCD store inside `ventoy_vhdboot.img`. If you require DSE to be disabled, copy `ventoy_vhdboot_DSE_DISABLED.img` to your Ventoy USB drive under `/ventoy/` and replace `ventoy_vhdboot.img`.
+
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
